@@ -1,36 +1,52 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/tarm/serial"
 )
 
 func writeRoutine(s *serial.Port) {
-	/* TODO */
+	r := bufio.NewReader(os.Stdin)
+
+	for {
+		text, err := r.ReadString('\n')
+		if err != nil {
+			panic(err)
+		}
+
+		if len(text) <= 1 {
+			fmt.Printf(">> ")
+			continue
+		}
+
+		s.Write([]byte(text))
+	}
 }
 
 func readRoutine(s *serial.Port, hex bool) {
 	buf := make([]byte, 256)
+
 	for {
 		n, err := s.Read(buf)
 		if err != nil {
-			log.Fatal(err)
-			continue
+			panic(err)
 		}
-		if n <= 0 {
-			continue
-		}
+
 		if hex {
-			/* TODO */
+			for i := 0; i < n; i++ {
+				fmt.Printf(" %02X", buf[i])
+			}
 		} else {
 			fmt.Printf("%s", buf[:n])
 		}
 	}
 }
 
-var hex *bool = flag.Bool("x", false, "display in hexadecimal format")
+var hex *bool = flag.Bool("x", false, "output in hex format")
 var baud *int = flag.Int("b", 115200, "baudrate")
 
 func main() {
